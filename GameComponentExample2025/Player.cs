@@ -39,6 +39,7 @@ namespace Sprites
             int startScore, float speed) 
             : base(game, tx[0],pos,frameCount)
         {
+            game.Services.AddService(this);
             _score = startScore;
             _speed = speed;
             _textures = tx;

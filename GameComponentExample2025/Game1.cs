@@ -5,6 +5,11 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Sprites;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
+using Tracker.WebAPIClient;
 
 
 namespace GameComponentExample2025
@@ -16,8 +21,13 @@ namespace GameComponentExample2025
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        SpriteFont spriteFont;
         private Texture2D _background;
         private Camera cam;
+
+        private static int _score = 0;
+
+        private static List<Collectible> collectibles = new List<Collectible>();
 
         public Game1()
         {
@@ -33,8 +43,8 @@ namespace GameComponentExample2025
         /// </summary>
         protected override void Initialize()
         {
+            ActivityAPIClient.Track(StudentID: "S0029562", StudentName: "Arthur Menudier", activityName: "DSAA Week 5 Labs 2026", Task: " Week 5 Lab 1 \r\nCreating Game play");
             // TODO: Add your initialization logic here
-
             base.Initialize();
         }
 
@@ -45,7 +55,7 @@ namespace GameComponentExample2025
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
-           
+            spriteFont = Content.Load<SpriteFont>("gameFont");
             _background = Content.Load<Texture2D>(@"backgroundImage");
             new Sprite(this, _background, Vector2.Zero, 1);
             new InputEngine(this);
@@ -68,6 +78,20 @@ namespace GameComponentExample2025
                                                 Content.Load<Texture2D>(@"Images/stand")},
                 _PlayerSounds,
                     new Vector2(200, 200), 6, 0, 5.0f);
+
+            Texture2D[] badge = new Texture2D[14];
+            SoundEffect[] sounds = new SoundEffect[14];
+            Random rand = new Random();
+            for (int i = 0;i < 14; i++)
+            {
+                badge[i] = Content.Load<Texture2D>(@"Badge Textures/Badges_" + i.ToString());
+                sounds[i] = Content.Load<SoundEffect>(@"Badge Audio/Badges_" + i.ToString());
+                Vector2 pos = new Vector2(rand.Next(0,_background.Width),rand.Next(0,_background.Height));
+                Collectible val = new Collectible(this, badge[i], sounds[i], spriteFont, pos, 1);
+
+
+                collectibles.Add(val);
+            }
 
             // TODO: use this.Content to load your game content here
         }
@@ -103,10 +127,20 @@ namespace GameComponentExample2025
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            
 
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
+            spriteBatch.Begin();
+            spriteBatch.DrawString(spriteFont, $"Collectible : {collectibles.Count}\nScore : {_score}", Vector2.Zero, Color.White);
+            spriteBatch.End();
+        }
+
+        public static void Collect(Collectible collectible,int score)
+        {
+            collectibles.Remove(collectible);
+            _score += score;
         }
     }
 }
