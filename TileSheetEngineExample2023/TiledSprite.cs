@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
+using Cameras;
 
 namespace TiledSpriteExample
 {
@@ -125,6 +125,7 @@ namespace TiledSpriteExample
 
         public virtual void Draw(SpriteBatch spriteBatch, Texture2D SpriteSheet)
         {
+            
             if (visible)
             {
                 spriteBatch.Draw(SpriteSheet,

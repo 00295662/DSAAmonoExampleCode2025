@@ -1,10 +1,14 @@
-﻿using Engine.Engines;
+﻿using Cameras;
+using Engine.Engines;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using TiledSpriteExample;
+using Tiler;
+using Tracker.WebAPIClient;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace TileSheetEngineExample2023
 {
@@ -17,8 +21,11 @@ namespace TileSheetEngineExample2023
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        SpriteFont spriteFont;
         TiledPlayer player;
         TileLayer current_layer;
+
+        private Camera cam;
 
         private TileLayer t_layer;
         TileLayer level2;
@@ -34,10 +41,13 @@ namespace TileSheetEngineExample2023
         };
         // Just for future reference Not used here
         TileTypes[] ImpassableTileTypes = new TileTypes[] { TileTypes.BLUE_STEEL_WALL_TILE, TileTypes.STEEL_WALL_TILE};
+        List<Collider> colliders = new List<Collider>();
+        Collider teleporter;
+        Vector2 teleporterPos = new Vector2(2,6);
 
         int[,] tileMap = new int[,]
             {
-                {1,3,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
+                {1,0,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                 {1,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                 {1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
                 {1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,2},
@@ -72,6 +82,7 @@ namespace TileSheetEngineExample2023
         /// </summary>
         protected override void Initialize()
         {
+            ActivityAPIClient.Track(StudentID: "S00295662", StudentName: "Arthur Menudier", activityName:" DSAA 2026 Week 5 Lab 2", Task: " Week 5 Lab 2 Implementing level selection");
             // TODO: Add your initialization logic here
             new InputEngine(this);
             base.Initialize();
@@ -83,9 +94,14 @@ namespace TileSheetEngineExample2023
         /// </summary>
         protected override void LoadContent()
         {
+            cam = new Camera(new Vector2(10,10), new Vector2(10000,10000));
+            this.Services.AddService(cam);
+
+            tileMap[(int)teleporterPos.X, (int)teleporterPos.Y] = 3;
             // Create a new SpriteBatch, which can be used to draw textures.
             Helper.SpriteSheet = Content.Load<Texture2D>("tank tiles 64 x 64");
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            spriteFont = Content.Load<SpriteFont>("gameFont");
             player = new TiledPlayer(
                 new Vector2(0,0),
                 new List<TileRef>()
@@ -98,9 +114,31 @@ namespace TileSheetEngineExample2023
                     new TileRef(20,9,0),
                     new TileRef(21,9,0),
                 }, 
-                64, 64, 1.0f);
+                64, 64, 1.0f,this);
             t_layer = new TileLayer(tileMap,layer_tileRefs, 64,64);
             // TODO: use this.Content to load your game content here
+            tileMap[(int)teleporterPos.X, (int)teleporterPos.Y] = 3;
+            foreach (TileTypes type in ImpassableTileTypes) {
+                SetColliders(type);
+            }
+            teleporter = new Collider(Content.Load<Texture2D>(@"collider"), (int)teleporterPos.Y,(int)teleporterPos.X);
+
+
+        }
+        public void SetColliders(TileTypes t)
+        {
+            for (int x = 0; x < tileMap.GetLength(1); x++)
+                for (int y = 0; y < tileMap.GetLength(0); y++)
+                {
+                    if (tileMap[y, x] == (int)t)
+                    {
+                        colliders.Add(new Collider(
+                            Content.Load<Texture2D>(@"collider"),
+                            x,y
+                            ));
+                    }
+
+                }
         }
 
         /// <summary>
@@ -125,6 +163,17 @@ namespace TileSheetEngineExample2023
             player.Update(gameTime);
             // TODO: Add your update logic here
 
+            foreach (var c in colliders)
+            {
+                player.Collision(c);
+            }
+            if (player.Collide(teleporter))
+            {
+                player.PixelPosition = new Vector2(0, 0);
+                player.AngleOfRotation = 0;
+            }
+            
+
             base.Update(gameTime);
         }
 
@@ -137,8 +186,13 @@ namespace TileSheetEngineExample2023
             GraphicsDevice.Clear(Color.CornflowerBlue);
             spriteBatch.Begin();
             t_layer.Draw(spriteBatch);
+            spriteBatch.End();
+
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, Camera.CurrentCameraTranslation);
             player.Draw(spriteBatch, Helper.SpriteSheet);
             // TODO: Add your drawing code here
+            spriteBatch.DrawString(spriteFont, "Arthur Menudier\nS00295662", new Vector2(graphics.PreferredBackBufferWidth / 2, graphics.PreferredBackBufferHeight / 2), Color.White);
+            spriteBatch.DrawString(spriteFont, "Arthur Menudier\nS00295662", new Vector2(0, 0), Color.White);
             spriteBatch.End();
             base.Draw(gameTime);
         }
