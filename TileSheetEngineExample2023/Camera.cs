@@ -1,47 +1,29 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using TiledSpriteExample;
 namespace Cameras
 {
     public class Camera
     {
-        static Vector2 _camPos = Vector2.Zero;
-        static public Vector2 WorldBound;
-        public static Matrix CurrentCameraTranslation { get
-            {
-                return Matrix.CreateTranslation(new Vector3(
-                    -CamPos,
-                    0));
-            } }
-
-        public static Vector2 CamPos
-        {
-            get
-            {
-                return _camPos;
-            }
-
-            set
-            {
-                _camPos = value;
-            }
+        public Matrix Transform { get; private set; }
+        private int _height;
+        private int _width;
+        public Camera(int height, int witdh) { 
+            _height = height;
+            _width = witdh;
         }
-
-        public Camera(Vector2 startPos, Vector2 bound)
+        public void Follow(TiledPlayer target)
         {
-            CamPos = startPos;
-            WorldBound = bound;
-        }
-
-        public void move(Vector2 delta, Viewport v)
-        {
-            CamPos += delta;
-            CamPos = Vector2.Clamp(CamPos, Vector2.Zero, WorldBound - new Vector2(v.Width, v.Height));
-        }
-
-        public static void follow(Vector2 followPos, Viewport v)
-        {
-            _camPos = followPos - new Vector2(v.Width / 2, v.Height / 2);
-            _camPos = Vector2.Clamp(_camPos, Vector2.Zero, WorldBound - new Vector2(v.Width, v.Height));
+            int size = 1;
+            var position = Matrix.CreateTranslation(
+              -target.PixelPosition.X * size,
+              -target.PixelPosition.Y *size,
+              0);
+            var offset = Matrix.CreateTranslation(
+                _width / 2,
+                _height / 2,
+                0);
+            Transform = position * offset;
         }
 
     }

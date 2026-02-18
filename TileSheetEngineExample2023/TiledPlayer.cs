@@ -26,16 +26,12 @@ namespace TiledSpriteExample
         }
         public float RotationSpeed { get; set; }
         public float speed { get; set; }
-        private Camera cam;
-        private Game _game;
         public TiledPlayer(Vector2 tilePosition, 
             List<TileRef> sheetRefs, int frameWidth, 
             int frameHeight, float layerDepth,Game game) : base(tilePosition, sheetRefs, frameWidth, frameHeight, layerDepth)
         {
             speed = 5.0f;
             RotationSpeed = 0.02f;
-            cam = game.Services.GetService<Camera>();
-            _game = game;
         }
 
         Vector2 previousPixelPosition;
@@ -57,9 +53,6 @@ namespace TiledSpriteExample
                     (float)Math.Sin(AngleOfRotation),
                     -(float)Math.Cos(AngleOfRotation)) * 5;
 
-
-
-            Camera.follow(pixelPosition*64, _game.GraphicsDevice.Viewport);
 
             base.Update(gametime);
         }
