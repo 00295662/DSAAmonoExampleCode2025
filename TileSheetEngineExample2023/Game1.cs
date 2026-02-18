@@ -135,6 +135,7 @@ namespace TileSheetEngineExample2023
             
             // TODO: use this.Content to load your game content here
             InitTiMap(tileMap);
+            SpawnPlayer(tileMap);
 
         }
 
@@ -195,9 +196,12 @@ namespace TileSheetEngineExample2023
             }
             if (player.Collide(teleporter))
             {
-                player.PixelPosition = new Vector2(64, 64);
-                player.AngleOfRotation = 0;
+                if (level)
+                {
+                    Exit();
+                }
                 InitTiMap(!level ? tileMap2 : tileMap);
+                SpawnPlayer(!level ? tileMap2 : tileMap);
                 level = !level;
             }
             cam.Follow(player);
@@ -224,6 +228,22 @@ namespace TileSheetEngineExample2023
 
             spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private void SpawnPlayer(int[,] tile)
+        {
+            for (int i = 0; i < tile.GetLength(0); i++)
+            {
+                for(int j = 0; j < tile.GetLength(1); j++)
+                {
+                    if (tile[i,j] == 1)
+                    {
+                        player.PixelPosition = new Vector2(64 * i, 64 * j);
+                        player.AngleOfRotation = 0;
+                        return;
+                    }
+                }
+            }
         }
     }
 }
